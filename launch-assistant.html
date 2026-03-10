@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Land Machine Launch Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --bg: #f2f6f3;
+        --panel: #ffffff;
+        --line: #d6dfd8;
+        --ink: #17231d;
+      }
+      body {
+        background:
+          radial-gradient(circle at 0% 0%, #dff1ea 0%, transparent 28%),
+          radial-gradient(circle at 100% 0%, #fbe8d2 0%, transparent 30%),
+          var(--bg);
+        color: var(--ink);
+      }
+      .card {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 16px;
+      }
+      .pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0.25rem 0.75rem;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen antialiased">
+    <main class="mx-auto max-w-5xl px-4 pb-20 pt-8 sm:px-6 lg:px-8">
+      <header class="mb-6 card p-5">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-teal-700">Launch Assistant</p>
+        <h1 class="mt-1 text-3xl font-black tracking-tight">Land Distribution Machine Setup Wizard</h1>
+        <p class="mt-2 text-sm text-slate-600">Complete each checkbox from top to bottom. This is your one-page launch control panel.</p>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <span class="pill bg-white" id="progressPill">0 / 15 complete</span>
+          <span class="pill bg-white" id="statusPill">Not ready to launch</span>
+        </div>
+        <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div id="progressBar" class="h-full w-0 bg-teal-700 transition-all"></div>
+        </div>
+      </header>
+
+      <section class="card p-5 mb-5">
+        <h2 class="text-xl font-bold">Step 1: Prepare Google Sheet</h2>
+        <div class="mt-3 space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s1a" /> Open Google Sheets and create a new sheet.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s1b" /> Add exact headers in row 1: Property Name, Acreage, Zoning, Coordinates, AI Summary.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s1c" /> Add property rows in row 2 and below.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s1d" /> Click File -> Share -> Publish to web -> choose CSV -> click Publish.</label>
+        </div>
+        <div class="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+          <input id="csvUrlInput" type="url" placeholder="Paste your published CSV URL here" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <button id="saveCsvBtn" class="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Save CSV URL</button>
+          <button id="copyHeadersBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Copy Headers</button>
+        </div>
+        <p id="csvStatus" class="mt-2 text-xs text-slate-600">No CSV URL saved yet.</p>
+      </section>
+
+      <section class="card p-5 mb-5">
+        <h2 class="text-xl font-bold">Step 2: Publish to GitHub Pages</h2>
+        <div class="mt-3 space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s2a" /> Create a GitHub repository (public recommended).</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s2b" /> Upload files: index.html, launch-assistant.html, README.md, AGENTS.md, DEPLOYMENT_GUIDE.md, AUTOMATION_BLUEPRINT.md, SHEET_TEMPLATE.csv.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s2c" /> Go to Settings -> Pages -> Deploy from a branch -> main -> /(root) -> Save.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s2d" /> Open the live GitHub Pages URL.</label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a href="DEPLOYMENT_GUIDE.md" target="_blank" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Open Full Deploy Guide</a>
+          <button id="copyCommitBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Copy Commit Message</button>
+        </div>
+        <p id="commitStatus" class="mt-2 text-xs text-slate-600">Commit message not copied yet.</p>
+      </section>
+
+      <section class="card p-5 mb-5">
+        <h2 class="text-xl font-bold">Deal Intake (Blank Template)</h2>
+        <p class="mt-1 text-sm text-slate-600">
+          Enter your real deal data. Nothing is pre-filled.
+        </p>
+        <div class="mt-4 grid gap-3 md:grid-cols-2">
+          <label class="text-sm">Property Name<input id="dealPropertyName" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Property ID<input id="dealPropertyId" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Parcel Number (Auto from Tracts)<input id="dealParcelNumber" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Property Address<input id="dealAddress" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">City<input id="dealCity" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">State<input id="dealState" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">ZIP<input id="dealZip" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Price<input id="dealPrice" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Owner Email (Required)<input id="dealOwnerEmail" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Use Code<input id="dealUseCode" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Property Type<input id="dealPropertyType" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Section<input id="dealSection" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Township<input id="dealTownship" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Range<input id="dealRange" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Tax Area<input id="dealTaxArea" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p class="text-sm font-semibold">3-Tract Package Builder</p>
+            <p class="mt-1 text-xs text-slate-600">Fill tract parcel IDs and tract acres. Total acreage and combined parcel string auto-update.</p>
+            <div class="mt-3 grid gap-2 md:grid-cols-2">
+              <label class="text-sm">Tract 1 Parcel ID<input id="dealTract1Parcel" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+              <label class="text-sm">Tract 1 Acres<input id="dealTract1Acres" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+              <label class="text-sm">Tract 2 Parcel ID<input id="dealTract2Parcel" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+              <label class="text-sm">Tract 2 Acres<input id="dealTract2Acres" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+              <label class="text-sm">Tract 3 Parcel ID<input id="dealTract3Parcel" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+              <label class="text-sm">Tract 3 Acres<input id="dealTract3Acres" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+            </div>
+            <label class="mt-2 flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" id="dealPackageOnly" />
+              Package only (not sold separately)
+            </label>
+          </div>
+          <label class="text-sm md:col-span-2">Map Description<input id="dealMapDescription" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Acreage (Required)<input id="dealAcreage" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm">Zoning (Required)<input id="dealZoning" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm md:col-span-2">Coordinates (Required, format: lat,lng)<input id="dealCoordinates" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" /></label>
+          <label class="text-sm md:col-span-2">AI Summary (Required)
+            <textarea id="dealAiSummary" rows="3" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"></textarea>
+          </label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="copyDealRowBtn" class="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Copy Google Sheet Row</button>
+          <button id="copyDealCsvBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Copy Full CSV</button>
+          <button id="downloadDealCsvBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Download Deal CSV</button>
+        </div>
+        <p id="dealStatus" class="mt-2 text-xs text-slate-600">Blank deal template loaded.</p>
+        <textarea id="dealPreview" rows="4" class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-xs"></textarea>
+      </section>
+
+      <section class="card p-5 mb-5">
+        <h2 class="text-xl font-bold">Step 3: Run Portal + API</h2>
+        <div class="mt-3 space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s3a" /> Open the portal and paste your CSV URL.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s3b" /> Click Sync Listings Now.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s3c" /> Confirm markers, cards, and valid listing count.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s3d" /> Open JSON API and confirm JSON output.</label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="openPortalBtn" class="rounded-xl bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Open Portal with CSV</button>
+          <button id="openApiBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Open API Mode</button>
+          <a href="index.html" target="_blank" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Open Portal (Manual)</a>
+        </div>
+      </section>
+
+      <section class="card p-5 mb-5">
+        <h2 class="text-xl font-bold">Step 4: Enable Daily Automation</h2>
+        <div class="mt-3 space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s4a" /> Build Make.com scenario OR Zapier Zap from the blueprint.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s4b" /> Trigger: New Spreadsheet Row in Intake tab.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s4c" /> Actions: Create Google Doc, append PublicDataset row, publish LinkedIn post.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s4d" /> Update source row status fields (Doc URL, LinkedIn URL, Published).</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s4e" /> Run one test row and confirm all outputs are live.</label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a href="AUTOMATION_BLUEPRINT.md" target="_blank" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Open Automation Blueprint</a>
+          <button id="copyPostBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Copy LinkedIn Template</button>
+        </div>
+        <p id="postStatus" class="mt-2 text-xs text-slate-600">LinkedIn template not copied yet.</p>
+      </section>
+
+      <section class="card p-5">
+        <h2 class="text-xl font-bold">Step 5: Daily Operations</h2>
+        <div class="mt-3 space-y-2 text-sm">
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s5a" /> Add new rows to Intake tab.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s5b" /> Confirm automation run success.</label>
+          <label class="flex items-start gap-2"><input type="checkbox" data-task="s5c" /> Confirm row appears in PublicDataset and LinkedIn post is live.</label>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button id="resetChecklistBtn" class="rounded-xl border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100">Reset All Checkboxes</button>
+          <button id="exportStatusBtn" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50">Copy Completion Report</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const TASK_KEY = "land-machine-launch-tasks-v1";
+      const CSV_KEY = "land-machine-launch-csv-v1";
+      const DEAL_KEY = "land-machine-deal-v2";
+      const COMMIT_MSG = "Initial Land Distribution Machine portal";
+      const HEADERS = "Property Name,Acreage,Zoning,Coordinates,AI Summary,Owner Email";
+      const LINKEDIN_TEMPLATE =
+        "New Kansas City Commercial Land Opportunity\\n\\nProperty: {{Property Name}}\\nAcreage: {{Acreage}}\\nZoning: {{Zoning}}\\nCoordinates: {{Coordinates}}\\n\\nSummary: {{AI Summary}}\\n\\nExplore more listings: {{Portal URL}}";
+      const DEAL_HEADERS = [
+        "Property Name",
+        "Acreage",
+        "Zoning",
+        "Coordinates",
+        "AI Summary",
+        "Property ID",
+        "Address",
+        "City",
+        "State",
+        "ZIP",
+        "Price",
+        "Parcel Number",
+        "Owner Email",
+        "Source URL",
+        "Image URL",
+        "Listing Status",
+        "Last Updated",
+        "Doc URL",
+        "LinkedIn URL",
+        "Automation Status",
+        "Published At",
+        "Map Description",
+        "Use Code",
+        "Property Type",
+        "Section",
+        "Township",
+        "Range",
+        "Tax Area",
+        "Tract 1 Parcel",
+        "Tract 1 Acres",
+        "Tract 2 Parcel",
+        "Tract 2 Acres",
+        "Tract 3 Parcel",
+        "Tract 3 Acres",
+        "Package Only",
+      ];
+      const STARTER_DEAL = {
+        propertyName: "",
+        acreage: "",
+        zoning: "",
+        coordinates: "",
+        aiSummary: "",
+        propertyId: "",
+        address: "",
+        city: "",
+        state: "",
+        zip: "",
+        price: "",
+        parcelNumber: "",
+        ownerEmail: "",
+        sourceUrl: "",
+        imageUrl: "",
+        listingStatus: "Draft",
+        lastUpdated: new Date().toISOString().slice(0, 10),
+        docUrl: "",
+        linkedInUrl: "",
+        automationStatus: "Draft",
+        publishedAt: "",
+        mapDescription: "",
+        useCode: "",
+        propertyType: "",
+        section: "",
+        township: "",
+        range: "",
+        taxArea: "",
+        tract1Parcel: "",
+        tract1Acres: "",
+        tract2Parcel: "",
+        tract2Acres: "",
+        tract3Parcel: "",
+        tract3Acres: "",
+        packageOnly: false,
+      };
+
+      const checkboxes = Array.from(document.querySelectorAll("input[type='checkbox'][data-task]"));
+      const progressPill = document.getElementById("progressPill");
+      const statusPill = document.getElementById("statusPill");
+      const progressBar = document.getElementById("progressBar");
+      const csvUrlInput = document.getElementById("csvUrlInput");
+      const csvStatus = document.getElementById("csvStatus");
+      const commitStatus = document.getElementById("commitStatus");
+      const postStatus = document.getElementById("postStatus");
+      const dealStatus = document.getElementById("dealStatus");
+      const dealPreview = document.getElementById("dealPreview");
+      const dealPackageOnly = document.getElementById("dealPackageOnly");
+
+      const dealFieldMap = {
+        propertyName: "dealPropertyName",
+        acreage: "dealAcreage",
+        zoning: "dealZoning",
+        coordinates: "dealCoordinates",
+        aiSummary: "dealAiSummary",
+        propertyId: "dealPropertyId",
+        address: "dealAddress",
+        city: "dealCity",
+        state: "dealState",
+        zip: "dealZip",
+        price: "dealPrice",
+        parcelNumber: "dealParcelNumber",
+        ownerEmail: "dealOwnerEmail",
+        mapDescription: "dealMapDescription",
+        useCode: "dealUseCode",
+        propertyType: "dealPropertyType",
+        section: "dealSection",
+        township: "dealTownship",
+        range: "dealRange",
+        taxArea: "dealTaxArea",
+        tract1Parcel: "dealTract1Parcel",
+        tract1Acres: "dealTract1Acres",
+        tract2Parcel: "dealTract2Parcel",
+        tract2Acres: "dealTract2Acres",
+        tract3Parcel: "dealTract3Parcel",
+        tract3Acres: "dealTract3Acres",
+      };
+
+      function safeParse(jsonText, fallbackValue) {
+        try {
+          return JSON.parse(jsonText);
+        } catch (_error) {
+          return fallbackValue;
+        }
+      }
+
+      function setPillText(complete, total) {
+        progressPill.textContent = `${complete} / ${total} complete`;
+        const percent = total ? Math.round((complete / total) * 100) : 0;
+        progressBar.style.width = `${percent}%`;
+        if (complete === total && total > 0) {
+          statusPill.textContent = "Ready to launch";
+          statusPill.className = "pill bg-emerald-50 text-emerald-800";
+        } else if (complete >= Math.ceil(total * 0.66)) {
+          statusPill.textContent = "Almost ready";
+          statusPill.className = "pill bg-amber-50 text-amber-800";
+        } else {
+          statusPill.textContent = "Not ready to launch";
+          statusPill.className = "pill bg-slate-50 text-slate-700";
+        }
+      }
+
+      function saveTasks() {
+        const data = {};
+        checkboxes.forEach((cb) => {
+          data[cb.dataset.task] = cb.checked;
+        });
+        localStorage.setItem(TASK_KEY, JSON.stringify(data));
+        const complete = checkboxes.filter((cb) => cb.checked).length;
+        setPillText(complete, checkboxes.length);
+      }
+
+      function loadTasks() {
+        const saved = safeParse(localStorage.getItem(TASK_KEY) || "{}", {});
+        checkboxes.forEach((cb) => {
+          cb.checked = Boolean(saved[cb.dataset.task]);
+          cb.addEventListener("change", saveTasks);
+        });
+        saveTasks();
+      }
+
+      function updateCsvStatus() {
+        const value = csvUrlInput.value.trim();
+        if (!value) {
+          csvStatus.textContent = "No CSV URL saved yet.";
+          return;
+        }
+        const ok = value.includes("output=csv");
+        csvStatus.textContent = ok ? "CSV URL saved and format looks correct." : "CSV URL saved, but it should include output=csv.";
+      }
+
+      function csvEscape(value) {
+        const s = String(value || "");
+        if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+          return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+      }
+
+      function parseNumericInput(value) {
+        const cleaned = String(value || "")
+          .replace(/[^0-9.\-]/g, "")
+          .trim();
+        if (!cleaned) return null;
+        const num = Number(cleaned);
+        return Number.isFinite(num) ? num : null;
+      }
+
+      function formatAcreValue(value) {
+        if (!Number.isFinite(value)) return "";
+        if (Math.abs(value - Math.round(value)) < 0.000001) return String(Math.round(value));
+        return String(Math.round(value * 1000) / 1000);
+      }
+
+      function syncPackageFieldsFromTracts() {
+        const t1Parcel = document.getElementById("dealTract1Parcel").value.trim();
+        const t2Parcel = document.getElementById("dealTract2Parcel").value.trim();
+        const t3Parcel = document.getElementById("dealTract3Parcel").value.trim();
+        const t1Acres = parseNumericInput(document.getElementById("dealTract1Acres").value);
+        const t2Acres = parseNumericInput(document.getElementById("dealTract2Acres").value);
+        const t3Acres = parseNumericInput(document.getElementById("dealTract3Acres").value);
+
+        const parcels = [t1Parcel, t2Parcel, t3Parcel].filter(Boolean);
+        if (parcels.length) {
+          document.getElementById("dealParcelNumber").value = parcels.join(";");
+        }
+
+        const acreValues = [t1Acres, t2Acres, t3Acres].filter((v) => v !== null);
+        if (acreValues.length) {
+          const total = acreValues.reduce((sum, n) => sum + n, 0);
+          document.getElementById("dealAcreage").value = formatAcreValue(total);
+        }
+      }
+
+      function readDealForm() {
+        const data = {};
+        Object.entries(dealFieldMap).forEach(([key, id]) => {
+          const input = document.getElementById(id);
+          data[key] = input ? input.value.trim() : "";
+        });
+        data.packageOnly = Boolean(dealPackageOnly && dealPackageOnly.checked);
+        data.sourceUrl = STARTER_DEAL.sourceUrl;
+        data.imageUrl = "";
+        data.listingStatus = data.packageOnly ? "Available - Package Only" : "Available";
+        data.lastUpdated = new Date().toISOString().slice(0, 10);
+        data.docUrl = "";
+        data.linkedInUrl = "";
+        data.automationStatus = "Draft";
+        data.publishedAt = "";
+        return data;
+      }
+
+      function dealToRow(data) {
+        return [
+          data.propertyName,
+          data.acreage,
+          data.zoning,
+          data.coordinates,
+          data.aiSummary,
+          data.propertyId,
+          data.address,
+          data.city,
+          data.state,
+          data.zip,
+          data.price,
+          data.parcelNumber,
+          data.ownerEmail,
+          data.sourceUrl,
+          data.imageUrl,
+          data.listingStatus,
+          data.lastUpdated,
+          data.docUrl,
+          data.linkedInUrl,
+          data.automationStatus,
+          data.publishedAt,
+          data.mapDescription,
+          data.useCode,
+          data.propertyType,
+          data.section,
+          data.township,
+          data.range,
+          data.taxArea,
+          data.tract1Parcel,
+          data.tract1Acres,
+          data.tract2Parcel,
+          data.tract2Acres,
+          data.tract3Parcel,
+          data.tract3Acres,
+          data.packageOnly ? "Yes" : "No",
+        ];
+      }
+
+      function updateDealStatus() {
+        syncPackageFieldsFromTracts();
+        const data = readDealForm();
+        const missing = [];
+        if (!data.propertyName) missing.push("Property Name");
+        if (!data.acreage) missing.push("Acreage");
+        if (!data.zoning) missing.push("Zoning");
+        if (!data.coordinates) missing.push("Coordinates");
+        if (!data.aiSummary) missing.push("AI Summary");
+        if (!data.ownerEmail) missing.push("Owner Email");
+
+        if (missing.length) {
+          dealStatus.textContent = `Missing required fields: ${missing.join(", ")}`;
+        } else {
+          dealStatus.textContent = "Required fields are complete.";
+        }
+
+        const row = dealToRow(data).map(csvEscape).join(",");
+        dealPreview.value = row;
+        localStorage.setItem(DEAL_KEY, JSON.stringify(data));
+      }
+
+      function loadDealForm() {
+        const saved = safeParse(localStorage.getItem(DEAL_KEY) || "{}", {});
+        const source = { ...STARTER_DEAL, ...saved };
+        Object.entries(dealFieldMap).forEach(([key, id]) => {
+          const input = document.getElementById(id);
+          if (input) input.value = source[key] || "";
+          if (input) input.addEventListener("input", updateDealStatus);
+        });
+        if (dealPackageOnly) {
+          dealPackageOnly.checked = source.packageOnly !== false;
+          dealPackageOnly.addEventListener("change", updateDealStatus);
+        }
+        updateDealStatus();
+      }
+
+      async function copyText(text, statusEl, okText) {
+        try {
+          await navigator.clipboard.writeText(text);
+          statusEl.textContent = okText;
+        } catch (_error) {
+          statusEl.textContent = "Copy failed. Please copy manually.";
+        }
+      }
+
+      function saveCsvUrl() {
+        localStorage.setItem(CSV_KEY, csvUrlInput.value.trim());
+        updateCsvStatus();
+      }
+
+      function readCsvUrl() {
+        return (localStorage.getItem(CSV_KEY) || "").trim();
+      }
+
+      function getCsvFromQuery() {
+        const url = new URL(window.location.href);
+        return (url.searchParams.get("csv") || "").trim();
+      }
+
+      function openPortal(apiMode) {
+        const csv = readCsvUrl() || csvUrlInput.value.trim();
+        const url = new URL("index.html", window.location.href);
+        if (csv) {
+          url.searchParams.set("csv", csv);
+        }
+        if (apiMode) {
+          url.searchParams.set("api", "1");
+        }
+        window.open(url.toString(), "_blank", "noopener");
+      }
+
+      function resetChecklist() {
+        checkboxes.forEach((cb) => {
+          cb.checked = false;
+        });
+        saveTasks();
+      }
+
+      async function copyCompletionReport() {
+        const complete = checkboxes.filter((cb) => cb.checked).length;
+        const total = checkboxes.length;
+        const csv = readCsvUrl();
+        const lines = [
+          `Land Machine Launch Report`,
+          `Completed: ${complete}/${total}`,
+          `CSV URL: ${csv || "Not set"}`,
+          `Timestamp: ${new Date().toISOString()}`,
+        ];
+        await copyText(lines.join("\n"), statusPill, "Completion report copied.");
+      }
+
+      function boot() {
+        const queryCsv = getCsvFromQuery();
+        if (queryCsv) {
+          localStorage.setItem(CSV_KEY, queryCsv);
+        }
+        const savedCsv = readCsvUrl();
+        csvUrlInput.value = savedCsv;
+        updateCsvStatus();
+        loadTasks();
+        loadDealForm();
+
+        document.getElementById("saveCsvBtn").addEventListener("click", saveCsvUrl);
+        document.getElementById("copyHeadersBtn").addEventListener("click", () => copyText(HEADERS, csvStatus, "Headers copied."));
+        document.getElementById("copyCommitBtn").addEventListener("click", () =>
+          copyText(COMMIT_MSG, commitStatus, "Commit message copied.")
+        );
+        document.getElementById("copyPostBtn").addEventListener("click", () =>
+          copyText(LINKEDIN_TEMPLATE, postStatus, "LinkedIn template copied.")
+        );
+        document.getElementById("copyDealRowBtn").addEventListener("click", () =>
+          copyText(dealPreview.value, dealStatus, "Deal row copied.")
+        );
+        document.getElementById("copyDealCsvBtn").addEventListener("click", () => {
+          const fullCsv = `${DEAL_HEADERS.join(",")}\n${dealPreview.value}`;
+          copyText(fullCsv, dealStatus, "Full CSV copied.");
+        });
+        document.getElementById("downloadDealCsvBtn").addEventListener("click", () => {
+          const fullCsv = `${DEAL_HEADERS.join(",")}\n${dealPreview.value}\n`;
+          const blob = new Blob([fullCsv], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "land-deal-export.csv";
+          a.click();
+          URL.revokeObjectURL(url);
+          dealStatus.textContent = "Deal CSV downloaded.";
+        });
+        document.getElementById("openPortalBtn").addEventListener("click", () => openPortal(false));
+        document.getElementById("openApiBtn").addEventListener("click", () => openPortal(true));
+        document.getElementById("resetChecklistBtn").addEventListener("click", resetChecklist);
+        document.getElementById("exportStatusBtn").addEventListener("click", copyCompletionReport);
+        csvUrlInput.addEventListener("input", updateCsvStatus);
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
