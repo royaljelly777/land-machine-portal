@@ -227,6 +227,8 @@
     <script>
       const DEFAULT_CENTER = [39.0997, -94.5786];
       const DEFAULT_CONTACT_EMAIL = "nicktruman@aol.com";
+      const DEFAULT_PUBLISHED_CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAksELMz1_E6737fEfAznB7CgSVjYJYGcR1H9dx0hYrSj9aAJh8HxuPpyT2s_Ua6uwaZtz2L9uINdp/pub?output=csv";
       const REQUIRED_FIELDS = ["property name", "acreage", "zoning", "coordinates", "ai summary"];
       const CONTACT_EMAIL_HEADERS = ["owner email", "owner", "contact email", "email"];
 
@@ -862,7 +864,7 @@
 
       function handleReset() {
         el.searchInput.value = "";
-        el.csvUrl.value = "";
+        el.csvUrl.value = DEFAULT_PUBLISHED_CSV_URL;
         state.sourceCsvUrl = "";
         updateContactCallout(DEFAULT_CONTACT_EMAIL);
         state.allRows = [];
@@ -875,7 +877,7 @@
         renderMap([]);
         injectJsonLd([]);
         refreshApiLinks();
-        setStatus("Waiting for CSV URL", "neutral");
+        setStatus("Ready with default CSV. Click Sync Listings Now.", "neutral");
         el.copyStatus.textContent = "No link copied yet.";
         el.contactCopyStatus.textContent = "Email ready to share.";
       }
@@ -903,12 +905,9 @@
         updateContactCallout(state.contactEmail || DEFAULT_CONTACT_EMAIL);
 
         const queryCsv = getQueryParamCsv();
-        if (queryCsv) {
-          el.csvUrl.value = queryCsv;
-          fetchAndProcess(queryCsv);
-        } else {
-          setStatus("Waiting for CSV URL", "neutral");
-        }
+        const csvToLoad = queryCsv || DEFAULT_PUBLISHED_CSV_URL;
+        el.csvUrl.value = csvToLoad;
+        fetchAndProcess(csvToLoad);
       }
 
       boot();
