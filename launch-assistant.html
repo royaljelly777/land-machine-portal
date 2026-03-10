@@ -180,6 +180,8 @@
       const TASK_KEY = "land-machine-launch-tasks-v1";
       const CSV_KEY = "land-machine-launch-csv-v1";
       const DEAL_KEY = "land-machine-deal-v2";
+      const DEFAULT_PUBLISHED_CSV_URL =
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAksELMz1_E6737fEfAznB7CgSVjYJYGcR1H9dx0hYrSj9aAJh8HxuPpyT2s_Ua6uwaZtz2L9uINdp/pub?output=csv";
       const COMMIT_MSG = "Initial Land Distribution Machine portal";
       const HEADERS = "Property Name,Acreage,Zoning,Coordinates,AI Summary,Owner Email";
       const LINKEDIN_TEMPLATE =
@@ -548,11 +550,9 @@
 
       function boot() {
         const queryCsv = getCsvFromQuery();
-        if (queryCsv) {
-          localStorage.setItem(CSV_KEY, queryCsv);
-        }
-        const savedCsv = readCsvUrl();
-        csvUrlInput.value = savedCsv;
+        const csvToUse = queryCsv || DEFAULT_PUBLISHED_CSV_URL;
+        localStorage.setItem(CSV_KEY, csvToUse);
+        csvUrlInput.value = csvToUse;
         updateCsvStatus();
         loadTasks();
         loadDealForm();
