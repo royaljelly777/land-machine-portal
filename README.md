@@ -6,6 +6,9 @@ This repository contains a no-code-friendly system for:
 3. Publishing machine-readable JSON output and dynamic JSON-LD for SEO/AI crawlers.
 4. Powering automation in Make.com or Zapier.
 
+## Current Live CSV (Use This)
+`https://docs.google.com/spreadsheets/d/e/2PACX-1vQAksELMz1_E6737fEfAznB7CgSVjYJYGcR1H9dx0hYrSj9aAJh8HxuPpyT2s_Ua6uwaZtz2L9uINdp/pub?output=csv`
+
 ## What Is Included
 - `index.html` - The full portal + map + cards + API mode + dynamic JSON-LD.
 - `launch-assistant.html` - One-page setup wizard with checkboxes and one-click launch buttons.
@@ -25,7 +28,7 @@ Your header row must include exactly:
 
 ## Daily Operator Flow (Simple)
 1. Open your deployed portal page.
-2. Paste your Google Sheet CSV URL into `Step 1`.
+2. Confirm `Step 1` already shows your live CSV URL above (or paste it if needed).
 3. Click `Sync Listings Now`.
 4. Use `Open JSON API` and `Download JSON` buttons as needed.
 
