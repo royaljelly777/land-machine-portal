@@ -2,6 +2,10 @@
 
 This guide uses only website buttons and menus.
 
+## Current Production CSV
+Use this exact URL:
+`https://docs.google.com/spreadsheets/d/e/2PACX-1vQAksELMz1_E6737fEfAznB7CgSVjYJYGcR1H9dx0hYrSj9aAJh8HxuPpyT2s_Ua6uwaZtz2L9uINdp/pub?output=csv`
+
 ## Part A: Prepare the Google Sheet
 1. Open [Google Sheets](https://sheets.google.com) and create a sheet.
 2. In row 1, add these exact headers:
@@ -55,7 +59,7 @@ This guide uses only website buttons and menus.
 
 ## Part E: First Live Test
 1. Open your published GitHub Pages URL.
-2. In `Operator Mode`, paste your Google Sheet CSV URL.
+2. In `Operator Mode`, use the production CSV URL above (it is also preloaded by default).
 3. Click `Sync Listings Now`.
 4. Confirm:
    - Map markers appear.
